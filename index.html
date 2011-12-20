@@ -1,0 +1,76 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <title>
+      Todo
+    </title>
+    <style>
+      body {
+        font-family: "sans";
+      }
+
+      #screen {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        bottom: 50px;
+      }
+
+      #list {
+        overflow: auto;
+        width: 100%;
+        height: 100%;
+        float: right;
+      }
+
+      #controls {
+        position: absolute;
+        height: 50px;
+        left: 5px;
+        right: 5px;
+        bottom: 10px;
+        font-size: 24;
+      }
+
+      .todoButton {
+        border: rgba(0, 0, 0, 100) solid 2px;
+        background-color: white;
+        padding: 10;
+        margin: 5;
+        float: left; 
+      }
+
+      .todoButton:hover {
+        background-color: grey
+      }
+
+      .todoButton:active {
+        background-color: black;
+        color: white;
+      }
+
+      .listItem {
+        margin: 10;
+        padding: 10;
+        background-color: grey;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div id="screen">
+	<span id="list">
+	</span>
+      </div>
+      <div id="controls" align="center">
+	<span style="float: left;">
+	  <span class="todoButton" id="done">Done</span>
+	  <span class="todoButton" id="drop">Drop</span>
+	  <span class="todoButton" id="new">+</span>
+	</span>
+      </div>
+    </div>
+    <script src="todo.js"></script>
+  </body>
+</html>
