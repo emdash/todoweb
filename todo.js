@@ -1,9 +1,9 @@
 todolist = (function () {
-
+"use strict";
 
 var get = function(id) {
     return document.getElementById(id);
-}
+};
 
 function el(tag) {
     var ret = document.createElement(tag);
@@ -27,38 +27,69 @@ function editableList() {
 
     function listItem() {
 	var item = el("div");
-	var entry = el("textarea");
-	var text = t("");
+	var entry = el("input");
+	var text = t("new item");
+	var focused = false;
 
-	item.appendChild(entry);
+	item.appendChild(text);
 
 	entry.type = "text";
 	entry.className = "listItem";
 
 	item.value = function () {
 	    return entry.value;
-	}
+	};
+
+	item.onclick = function () {
+	    if (item === selected) {
+		item.focus();
+	    } else {
+		ret.select(item);
+	    }
+	};
 
 	item.focus = function () {
+	    if (focused) {
+		return;
+	    }
+	    focused = true;
+	    entry.value = text.data;
+	    item.appendChild(entry);
+	    item.removeChild(text);
 	    entry.focus();
-	}
+	};
 
-	entry.onfocus = function () {
-	    ret.select(item);
-	}
+	item.blur = function () {
+	    if (focused) {
+		entry.onblur();
+	    }
+	};
+
+	entry.onblur = function () {
+	    if (!focused) {
+		return;
+	    }
+	    focused = false;
+	    item.removeChild(entry);
+	    item.appendChild((text = t(entry.value)));
+	};
 
 	return item;
     };
 
     ret.select = function (item) {
+	if (selected) {
+	    selected.className = "listItem";
+	    selected.blur();
+	}
 	selected = item;
-    }
-    
+	selected.className = "listItem selected";
+    };
+
     ret.add = function () {
 	var item = listItem();
 	ret.appendChild(item);
-	item.focus();
-
+	ret.select(item);
     };
 
     ret.getItems = function () {
@@ -74,7 +105,7 @@ function editableList() {
 	if (selected) {
 	    ret.removeChild(selected);
 	}
-    }
+    };
 
     return ret;
 }
@@ -112,7 +143,7 @@ var dropBtn = get("drop");
 var newBtn = get("new");
 var list = editableList();
 get("list").appendChild(list);
-mobileScrollFix(get("list"));
+mobileScrollFix(get("screen"));
 
 newBtn.onclick = function () {
     list.add();
@@ -120,6 +151,6 @@ newBtn.onclick = function () {
 
 dropBtn.onclick = function () {
     list.remove();
-}
+};
 
 })();
