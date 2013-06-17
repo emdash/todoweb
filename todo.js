@@ -33,10 +33,6 @@ function editableList() {
 	item.contentEditable = "true";
 	item.className = "listItem";
 
-	item.onclick = function () {
-	    ret.select(item);
-	};
-
 	item.onkeypress = function (evt) {
 	    switch (evt.keyCode) {
 	    case 13:
@@ -57,12 +53,15 @@ function editableList() {
 	    };
 	};
 
-	return item;
-    };
+	item.onfocus = function (evt) {
+	    selected = item;
+	    setTimeout(
+		function () {
+		    document.getSelection().selectAllChildren(item);
+		}, 1);
+	};
 
-    ret.select = function (item) {
-	selected = item;
-	document.getSelection().selectAllChildren(item);
+	return item;
     };
 
     ret.add = function () {
@@ -72,7 +71,6 @@ function editableList() {
 	} else {
 	    ret.appendChild(item);
 	}
-	ret.select(item);
 	item.focus();
     };
 
@@ -83,9 +81,7 @@ function editableList() {
 
 	if (selected) {
 	    ret.removeChild(selected);
-	    if (next) {
-		ret.select(next);
-	    }
+	    next && next.focus();
 	}
     };
 
@@ -125,6 +121,7 @@ var dropBtn = get("drop");
 var newBtn = get("new");
 var list = editableList();
 get("list").appendChild(list);
+list.add();
 mobileScrollFix(get("screen"));
 
 newBtn.onclick = function () {
