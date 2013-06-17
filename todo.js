@@ -27,83 +27,65 @@ function editableList() {
 
     function listItem() {
 	var item = el("div");
-	var entry = el("input");
-	var text = t("new item");
-	var focused = false;
+	var text = t("");
 
 	item.appendChild(text);
-
-	entry.type = "text";
-	entry.className = "listItem";
-
-	item.value = function () {
-	    return entry.value;
-	};
+	item.contentEditable = "true";
+	item.className = "listItem";
 
 	item.onclick = function () {
-	    if (item === selected) {
-		item.focus();
-	    } else {
-		ret.select(item);
-	    }
+	    ret.select(item);
 	};
 
-	item.focus = function () {
-	    if (focused) {
-		return;
-	    }
-	    focused = true;
-	    entry.value = text.data;
-	    item.appendChild(entry);
-	    item.removeChild(text);
-	    entry.focus();
-	};
+	item.onkeypress = function (evt) {
+	    switch (evt.keyCode) {
+	    case 13:
+		ret.add();
+		evt.preventDefault();
+		break;
+	    case 40:
+		if (selected && selected.nextSibling) {
+		    ret.select(selected.nextSibling);
+		}
+ 		break;
+	    case 38:
+		if (selected && selected.prevSibling) {
+		    ret.selected(selected.prevSibling);
+		}
+		break;
 
-	item.blur = function () {
-	    if (focused) {
-		entry.onblur();
-	    }
-	};
-
-	entry.onblur = function () {
-	    if (!focused) {
-		return;
-	    }
-	    focused = false;
-	    item.removeChild(entry);
-	    item.appendChild((text = t(entry.value)));
+	    };
 	};
 
 	return item;
     };
 
     ret.select = function (item) {
-	if (selected) {
-	    selected.className = "listItem";
-	    selected.blur();
-	}
 	selected = item;
-	selected.className = "listItem selected";
+	document.getSelection().selectAllChildren(item);
     };
 
     ret.add = function () {
 	var item = listItem();
-	ret.appendChild(item);
-	ret.select(item);
-    };
-
-    ret.getItems = function () {
-	var items = [];
-	for (i = ret.firstChild; i; i = i.nextSibling) {
-	    items.push(i.value());
+	if (selected) {
+	    ret.insertBefore(item, selected.nextSibling);
+	} else {
+	    ret.appendChild(item);
 	}
-
-	return items;
+	ret.select(item);
+	item.focus();
     };
 
     ret.remove = function () {
+	var next = selected ?
+	    (selected.nextSibling || selected.previousSibling) :
+	    null;
+
 	if (selected) {
 	    ret.removeChild(selected);
+	    if (next) {
+		ret.select(next);
+	    }
 	}
     };
 
