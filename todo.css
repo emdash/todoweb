@@ -1,6 +1,6 @@
 body {
     font-family: "sans";
-    background-color: #CCCCCC;
+    background-color: #FFFFFF;
 }
 
 #screen {
@@ -11,7 +11,6 @@ body {
     right: 0px;
     top: 0px;
     bottom: 100px;
-    background-color: #FFFFFF;
 }
 
 #list {
@@ -20,12 +19,13 @@ body {
 }
 
 #controls {
-    position: absolute;
-    height: 50px;
-    left: 5px;
-    right: 5px;
-    bottom: 25px;
-    font-size: 18;
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    font-size: 14pt;
+    background-color: #CCCCCC;
+    padding: 10px;
 }
 
 .todoButton {
@@ -47,9 +47,8 @@ body {
 
 .listItem {
     padding: 10;
-    width: 100%;
-    font-size: 24;
-    margin: 2px;
+    font-size: 14pt;
+    margin: 5px;
     background-color: #CCCCCC;
 }
 
