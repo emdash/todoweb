@@ -26,10 +26,8 @@ function editableList() {
     var selected;
 
     function listItem() {
-	var item = el("div");
-	var text = t("");
+	var item = el("div", t("Todo Item"));
 
-	item.appendChild(text);
 	item.contentEditable = "true";
 	item.className = "listItem";
 
