@@ -29,7 +29,7 @@ body {
 }
 
 .todoButton {
-    border: rgba(0, 0, 0, 100) solid 2px;
+    border: hidden;
     background-color: white;
     padding: 10;
     margin: 5;
@@ -48,7 +48,7 @@ body {
 .listItem {
     padding: 10;
     width: 100%;
-    font-size: 18;
+    font-size: 24;
     margin: 2px;
     background-color: #CCCCCC;
 }
