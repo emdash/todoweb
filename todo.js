@@ -106,10 +106,19 @@ function mobileScrollFix(element) {
 var doneBtn = get("done");
 var dropBtn = get("drop");
 var newBtn = get("new");
+var loginBtn = get("doLogin");
+var loginView = get("loginView");
+var listView = get("listView");
 var list = editableList();
+
 get("list").appendChild(list);
 list.add();
 mobileScrollFix(get("screen"));
+
+loginBtn.onclick = function () {
+    loginView.className = "hidden";
+    listView.className = "";
+}
 
 newBtn.onclick = function () {
     list.add();
