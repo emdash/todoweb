@@ -37,17 +37,6 @@ function editableList() {
 		ret.add();
 		evt.preventDefault();
 		break;
-	    case 40:
-		if (selected && selected.nextSibling) {
-		    ret.select(selected.nextSibling);
-		}
- 		break;
-	    case 38:
-		if (selected && selected.prevSibling) {
-		    ret.selected(selected.prevSibling);
-		}
-		break;
-
 	    };
 	};
 
