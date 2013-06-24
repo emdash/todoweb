@@ -126,3 +126,20 @@ input {
     background-color: #EEEEEE;
     border: hidden;
 }
+
+.listItem[contentEditable="false"] {
+    color: grey;
+    cursor: progress;
+    content: "Updating...";
+}
+
+.listItem[contentEditable="false"]:after {
+    margin-left: 5px;
+    font-size: 6pt;
+    content: "Updating...";
+    vertical-align: middle;
+}
+
+.completed {
+    text-decoration: line-through;
+}
