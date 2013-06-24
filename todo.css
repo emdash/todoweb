@@ -64,6 +64,10 @@ input {
     color: white;
 }
 
+#managerView div {
+    
+}
+
 #screen {
     position: absolute;
     overflow-y: auto;

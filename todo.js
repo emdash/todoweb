@@ -207,13 +207,49 @@ var password = get("password");
 get("list").appendChild(list);
 mobileScrollFix(get("screen"));
 
-loginBtn.onclick = function () {
-    loginView.className = "hidden";
+function showList(text) {
+    var items = text.split("\n");
+    managerView.className = "hidden";
     listView.className = "";
+
+    items.forEach(
+	function (i) {
+	    lm.append(i);
+	}
+    );
 }
 
+function load(i) {
+    return function () {
+	request("GET", "lists/" + i, showList);
+    };
+}
+
+function populateLists(text) {
+    var lists = text.split("\n");
+
+    lists.forEach(
+	function (i) {
+	    var li;
+	    if (i) {
+		li = el("div", t(i));
+		li.className = "listItem";
+		managerView.appendChild(li);
+		li.onclick = load(i);
+	    }
+	}
+    );
+
+    loginView.className = "hidden";
+    managerView.className = "";
+}
+
+loginBtn.onclick = function () {
+    request("GET", "lists.txt", populateLists);
+};
+
 newBtn.onclick = function () {
-    list.add();
+    list.append();
 };
 
 dropBtn.onclick = function () {
