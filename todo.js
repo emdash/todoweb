@@ -178,7 +178,6 @@ function mobileScrollFix(element) {
 
     function touchstart(event) {
 	scrollStartPos = this.scrollTop + event.touches[0].pageY;
-	//event.preventDefault();
     }
 
     function touchmove(event) {
