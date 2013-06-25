@@ -21,12 +21,17 @@ input {
     width: auto;
 }
 
-#loginview {
+#loginView {
+    display: none;
     position: absolute;
     left: 0px;
     right: 0px;
     top: 0px;
     bottom: 0px;
+}
+
+body[curView="loginView"] #loginView {
+    display: block;
 }
 
 #loginview table {
@@ -64,8 +69,20 @@ input {
     color: white;
 }
 
-#managerView div {
-    
+#managerView {
+    display: none;
+}
+
+body[curView="managerView"] #managerView {
+    display: block;
+}
+
+#listView {
+    display: none;
+}
+
+body[curView="listView"] #listView {
+    display: block;
 }
 
 #screen {
@@ -131,19 +148,31 @@ input {
     border: hidden;
 }
 
-.listItem[contentEditable="false"] {
+.listItem[completed=true] {
     color: grey;
-    cursor: progress;
-    content: "Updating...";
+    text-decoration: line-through;
 }
 
-.listItem[contentEditable="false"]:after {
+#listView[editing="true"] .listItem[contentEditable="false"] {
+    color: grey;
+    cursor: progress;
+}
+
+#listView[editing="true"] .listItem[contentEditable="false"]:after {
     margin-left: 5px;
     font-size: 6pt;
     content: "Updating...";
     vertical-align: middle;
 }
 
-.completed {
-    text-decoration: line-through;
+#listView[editing="false"] #list[showCompleted="false"] .listItem[completed=true] {
+    display:none;
+}
+
+#listView[editing="true"] #show {
+    display: none;
+}
+
+#listView[editing="false"] #new, #listView[editing="false"] #drop {
+    display: none;
 }

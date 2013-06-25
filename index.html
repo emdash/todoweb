@@ -5,7 +5,7 @@
     <link href="todo.css" rel="stylesheet" type="text/css" />
   </head>
 
-  <body>
+  <body curView="loginView">
     <div id="loginView">
       <table>
 	<tr>
@@ -18,18 +18,19 @@
       <div id="doLogin">Login</div>
     </div>
 
-    <div id="managerView" class="hidden">
+    <div id="managerView">
       <div>Saved Lists</div>
     </div>
 
-    <div id="listView" class="hidden">
+    <div id="listView" editing="false">
       <div id="screen">
-	<span id="list">
-	</span>
+	<div id="list" showCompleted="false">
+	</div>
       </div>
       <div id="controls" align="center">
-	<span style="float: left;">
-	  <span class="todoButton" id="done">Done</span>
+ 	<span style="float: left;">
+	  <span class="todoButton" id="done">Edit</span>
+	  <span class="todoButton" id="show">Show Completed</span>
 	  <span class="todoButton" id="drop" style="width: 1em">-</span>
 	  <span class="todoButton" id="new" style="width: 1em">+</span>
 	</span>

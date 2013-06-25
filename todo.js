@@ -36,17 +36,21 @@ function request(method, uri, closure) {
     req.send();
 }
 
+function restyle() {
+    document.body.className = document.body.className;
+}
 
-function editableList(model) {
-    var ret = el("div");
+
+function editableList(model, ret) {
     var items = [];
     var selected;
+    var editing = "false";
 
     function listItem() {
 	var item = el("div");
 	var content;
 
-	item.contentEditable = "true";
+	item.contentEditable = editing;
 	item.className = "listItem";
 
 	item.onkeypress = function (evt) {
@@ -73,6 +77,17 @@ function editableList(model) {
 	    }
 	    item.contentEditable = false;
 	    model.update (items.indexOf(item), item.innerHTML);
+	};
+
+	item.onclick = function (evt) {
+	    if (editing == "false") {
+		if (item.getAttribute("completed") == "true") {
+		    item.setAttribute("completed", "false");
+		} else {
+		    item.setAttribute("completed", "true");
+		}
+		restyle();
+	    }
 	};
 
 	return item;
@@ -113,6 +128,14 @@ function editableList(model) {
 	}
     };
 
+    ret.setEditMode = function (mode) {
+	var li;
+	editing = mode;
+	for (li = ret.firstChild; li !== null; li = li.nextSibling) {
+	    li.contentEditable = mode;
+	}
+    };
+
     return ret;
 }
 
@@ -139,10 +162,12 @@ function listModel(defaultItem) {
 
     ret.update = function (index, item) {
 	items[index] = item || defaultItem;
-	// simulate network roundtrip
-	setTimeout(function () {
-		       ret.itemChanged(index, item);
-		   }, 3000);
+	setTimeout(
+	    function () {
+		ret.itemChanged(index, item);
+	    },
+	    1000
+	);
     };
 
     ret.insert = function(index, item) {
@@ -191,25 +216,26 @@ function mobileScrollFix(element) {
     }
 }
 
+var body = document.body;
 var doneBtn = get("done");
 var dropBtn = get("drop");
 var newBtn = get("new");
+var showBtn = get("show");
 var loginBtn = get("doLogin");
 var loginView = get("loginView");
 var listView = get("listView");
 var managerView = get("managerView");
 var lm = listModel("New Item");
-var list = editableList(lm);
+var list = editableList(lm, get("list"));
 var login = get("login");
 var password = get("password");
 
-get("list").appendChild(list);
 mobileScrollFix(get("screen"));
 
 function showList(text) {
     var items = text.split("\n");
-    managerView.className = "hidden";
-    listView.className = "";
+    body.setAttribute("curView", "listView");
+    restyle();
 
     items.forEach(
 	function (i) {
@@ -239,8 +265,8 @@ function populateLists(text) {
 	}
     );
 
-    loginView.className = "hidden";
-    managerView.className = "";
+    body.setAttribute("curView", "managerView");
+    restyle();
 }
 
 loginBtn.onclick = function () {
@@ -251,8 +277,27 @@ newBtn.onclick = function () {
     list.append();
 };
 
-dropBtn.onclick = function () {
-    list.remove();
+doneBtn.onclick = function () {
+    if (doneBtn.innerHTML === "Edit") {
+	list.setEditMode("true");
+	listView.setAttribute("editing", "true");
+	doneBtn.innerHTML = "Done";
+    } else {
+	list.setEditMode("false");
+	listView.setAttribute("editing", "false");
+	doneBtn.innerHTML = "Edit";
+    }
+    restyle();
 };
 
+showBtn.onclick = function () {
+    if (showBtn.innerHTML === "Show Completed") {
+	list.setAttribute("showCompleted", "true");
+	showBtn.innerHTML = "Hide Completed";
+    } else {
+	list.setAttribute("showCompleted", "false");
+	showBtn.innerHTML = "Show Completed";
+    }
+    restyle();
+};
 })();
