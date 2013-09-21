@@ -1,40 +1,6 @@
 todolist = (function () {
 "use strict";
 
-var get = function(id) {
-    return document.getElementById(id);
-};
-
-function el(tag) {
-    var ret = document.createElement(tag);
-    var i;
-
-    for (i = 1; i < arguments.length; i++) {
-	ret.appendChild(arguments[i]);
-    }
-
-    return ret;
-}
-
-function t(text) {
-    return document.createTextNode(text);
-}
-
-function request(method, uri, closure) {
-    var req = new XMLHttpRequest();
-
-    req.onreadystatechange = function () {
-	if (req.readyState == 4) {
-	    closure(req.responseText);
-	}
-    };
-
-    req.open(method, uri, true,
-	     login.value,
-	     password.value);
-
-    req.send();
-}
 
 function restyle() {
     document.body.className = document.body.className;
@@ -188,34 +154,156 @@ function listModel(defaultItem) {
     return ret;
 }
 
+function jsonCmdServer(url) {
+    var socket = new SockJS(url);
+    var handlers = {};
 
-function isTouchDevice(){
-    try {
-	document.createEvent("TouchEvent");
-	return true;
-    } catch(e) {
-	return false;
-    }
+    socket.onmessage = function (e) {
+	var message = JSON.parse(e.data);
+	if (handlers[message.type]) {
+	    handlers[message.type](message);
+	}
+    };
+
+    return {
+	send: function (msg) { socket.send(JSON.stringify(msg)); },
+	setMsgHandler: function(message, handler) { handlers[message] = handler; },
+	setErrHandler: function(handler) {
+	    socket.onclose = handler;
+	}
+    };
 }
 
-function mobileScrollFix(element) {
-    var scrollStartPos = 0;
+function channel(name, server) {
+    var handlers = {};
 
-    function touchstart(event) {
-	scrollStartPos = this.scrollTop + event.touches[0].pageY;
+    function handleMessage(msg) {
+	if (handlers[msg.type]) {
+	    handlers[msg.type](msg);
+	}
     }
 
-    function touchmove(event) {
-	this.scrollTop = scrollStartPos - event.touches[0].pageY;
-	event.preventDefault();
+    function sendMessage(msg) {
+	server.send({type: "send",
+		     name: name,
+		     content: msg});
     }
 
-    if (isTouchDevice()) {
-	element.ontouchstart = touchstart;
-	element.ontouchmove = touchmove;
-    }
+    return {
+	handle: handleMessage,
+	send: sendMessage,
+	setMsgHandler: function (msg, handler) { handlers[msg] = handler; }
+    };
 }
 
+function channelServer(url) {
+    var cmdserver = jsonCmdServer(url);
+    var channels = {};
+
+    function handleChannelMessage(message) {
+	if (channels[message.name]) {
+	    channels[message.name].handle(message.content);
+	}
+    }
+
+    function joinChannel(name, handler) {
+	cmdserver.send({type: "join",
+			name: name});
+	return channels[name] = channel(name, cmdserver);
+    }
+
+    function leaveChannel(name) {
+	cmdserver.send({type: "leave",
+			name: name});
+	delete channels[name];
+    }
+
+    cmdserver.setMsgHandler("channel-message", handleChannelMessage);
+
+    return {
+	send: cmdserver.send,
+	setMsgHandler: cmdserver.setMsgHandler,
+	setErrHandler: cmdserver.setErrHandler,
+	login: doLogin,
+	join: joinChannel,
+	leave: leaveChannel
+    };
+}
+
+function todoServer() {
+    var chansrv = channelServer("http://" + window.location.host + ":8080/todo");
+    var control;
+
+    function load(id) {
+	return function () {
+	    var channel = chansrv.join(id);
+	    channel.setMsgHandler("insert", handleInsert);
+	    channel.setMsgHandler("delete", handleDelete);
+	    channel.setMsgHandler("update", handleUpdate);
+	};
+    }
+
+    function doLogin(user, password) {
+	chansrv.send({type: "login",
+		      user: user,
+		      password: password});
+    }
+
+    function handleLogin() {
+	control = chansrv.join("control");
+	control.setMsgHandler("list-added", handleListAdded);
+	control.send({"type": "get-lists"});
+	body.setAttribute("curView", "managerView");
+	restyle();
+    }
+
+    function handleListAdded(message) {
+	var li;
+
+	li = el("div");
+	li.appendChild(text(message.name));
+	li.className = "listItem";
+	managerView.appendChild(li);
+	li.onclick = load(message.id);
+    }
+
+    function showList(message) {
+	body.setAttribute("curView", "listView");
+	restyle();
+    }
+
+    function handleInsert(message) {
+	lm.insert(message.index, message.content);
+    }
+
+    function handleDelete(message) {
+	lm.remove(message.index);
+    }
+
+    function handleUpdate(message) {
+	lm.update(message.index, message.attrs.content);
+    }
+
+    function handleError(msg) {
+	alert(msg.message);
+    }
+
+    function handleSocketError() {
+	body.setAttribute("curView", "loginView");
+	alert("Lost connection to server.");
+	restyle();
+    }
+
+    chansrv.setErrHandler(handleSocketError);
+    chansrv.setMsgHandler("login", handleLogin);
+    chansrv.setMsgHandler("error", handleError);
+
+    return {
+	login: doLogin
+    };
+};
+
+var server = todoServer();
 var body = document.body;
 var doneBtn = get("done");
 var dropBtn = get("drop");
@@ -232,49 +320,16 @@ var password = get("password");
 
 mobileScrollFix(get("screen"));
 
-function showList(text) {
-    var items = text.split("\n");
-    body.setAttribute("curView", "listView");
-    restyle();
-
-    items.forEach(
-	function (i) {
-	    lm.append(i);
-	}
-    );
-}
-
-function load(i) {
-    return function () {
-	request("GET", "lists/" + i, showList);
-    };
-}
-
-function populateLists(text) {
-    var lists = text.split("\n");
-
-    lists.forEach(
-	function (i) {
-	    var li;
-	    if (i) {
-		li = el("div", t(i));
-		li.className = "listItem";
-		managerView.appendChild(li);
-		li.onclick = load(i);
-	    }
-	}
-    );
-
-    body.setAttribute("curView", "managerView");
-    restyle();
-}
-
 loginBtn.onclick = function () {
-    request("GET", "lists.txt", populateLists);
+    server.login(login.value, password.value);
 };
 
 newBtn.onclick = function () {
     list.append();
+};
+
+dropBtn.onclick = function () {
+    list.remove();
 };
 
 doneBtn.onclick = function () {
