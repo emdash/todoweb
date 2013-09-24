@@ -307,8 +307,15 @@ function channelServer(url) {
 }
 
 function todoServer() {
-    var chansrv = channelServer("http://" + window.location.host + ":8080/todo");
+    var chansrv;
     var control;
+
+    function connect() {
+	chansrv = channelServer("http://" + window.location.host + ":8080/todo");
+	chansrv.setErrHandler(handleSocketError);
+	chansrv.setMsgHandler("login", handleLogin);
+	chansrv.setMsgHandler("error", handleError);
+    }
 
     function load(id) {
 	return function () {
@@ -357,11 +364,10 @@ function todoServer() {
 	body.setAttribute("curView", "loginView");
 	alert("Lost connection to server.");
 	restyle();
+	connect();
     }
 
-    chansrv.setErrHandler(handleSocketError);
-    chansrv.setMsgHandler("login", handleLogin);
-    chansrv.setMsgHandler("error", handleError);
+    connect();
 
     return {
 	login: doLogin,
