@@ -22,7 +22,7 @@ function editableList(model, ret) {
 	item.onkeypress = function (evt) {
 	    switch (evt.keyCode) {
 	    case 13:
-		model.insert(items.indexOf(item) + 1);
+		model.insert(items.indexOf(item) + 1, {});
 		evt.preventDefault();
 		break;
 	    };
@@ -42,50 +42,77 @@ function editableList(model, ret) {
 		return;
 	    }
 	    item.contentEditable = false;
-	    model.update (items.indexOf(item), item.innerHTML);
+	    model.update(items.indexOf(item), {content: item.innerHTML});
 	};
 
 	item.onclick = function (evt) {
+	    var completed;
+
 	    if (editing == "false") {
 		if (item.getAttribute("completed") == "true") {
-		    item.setAttribute("completed", "false");
+		    completed = "false";
 		} else {
-		    item.setAttribute("completed", "true");
+		    completed = "true";
 		}
-		restyle();
+
+		model.update(items.indexOf(item), {completed: completed});
 	    }
 	};
 
 	return item;
     };
 
-    model.itemAdded = function (index, content) {
+    model.itemAdded = function (index, attrs) {
 	var item = listItem();
-	item.innerHTML = content;
+	var attr;
+
 	ret.insertBefore(item, items[index]);
 	items.splice(index, 0, item);
+
+	for (attr in attrs) {
+	    model.itemChanged(index, attr, attrs[attr]);
+	}
+
 	item.focus();
     };
 
-    model.itemChanged = function (index, content) {
+    model.itemChanged = function (index, attr, value) {
 	var item = items[index];
-	item.innerHTML = content;
-	item.contentEditable = true;
+
+	if (!item) {
+	    return;
+	}
+
+	if (attr == "content") {
+	    item.innerHTML = value;
+
+	    if (editing == "true") {
+		item.contentEditable = true;
+	    }
+	} else {
+	    item.setAttribute(attr, value);
+	}
     };
 
     model.itemRemoved = function (index) {
 	var item = items[index];
+	var unused = { focus: function () {}};
+	var hilight;
+
 	items.splice(index, 1);
+
 	if (item === selected) {
-	    ((item.nextSibling)
-	     || (item.previousSibling)
-	     || el("unused")).focus();
+	    hilight = (item.nextSibling
+			|| item.previousSibling
+			|| unused);
+	    hilight.focus && hilight.focus();
 	}
-	ret.removeChild(item);
+
+	item && ret.removeChild(item);
     };
 
     ret.append = function () {
-	model.insert(items.indexOf(selected) + 1);
+	model.insert(items.indexOf(selected) + 1, {});
     };
 
     ret.remove = function () {
@@ -126,24 +153,21 @@ function listModel(defaultItem) {
 	return items.length;
     };
 
-    ret.update = function (index, item) {
-	items[index] = item || defaultItem;
-	setTimeout(
-	    function () {
-		ret.itemChanged(index, item);
-	    },
-	    1000
-	);
+    ret.update = function (index, attrs) {
+	var attr;
+	var value;
+
+	for (attr in attrs) {
+	    value = attrs[attr];
+	    items[index][attr] = value;
+	    ret.itemChanged(index, attr, value);
+	}
     };
 
-    ret.insert = function(index, item) {
-	var content = item || defaultItem;
-	items.splice(index, 0, content);
-	ret.itemAdded(index, content);
-    };
-
-    ret.append = function(item) {
-	ret.insert(items.length, item);
+    ret.insert = function(index, attrs) {
+	attrs.content = attrs.content || defaultItem;
+	items.splice(index, 0, attrs);
+	ret.itemAdded(index, attrs);
     };
 
     ret.remove = function (index) {
@@ -154,19 +178,69 @@ function listModel(defaultItem) {
     return ret;
 }
 
+
+function remoteListModel(channel, defaultItem)
+{
+    var ret = listModel(defaultItem);
+    var insert = ret.insert;
+    var remove = ret.remove;
+    var update = ret.update;
+
+    function handleInsert(msg) {
+	insert(msg.index, msg.attrs);
+    }
+
+    function handleDelete(msg) {
+	remove(msg.index);
+    }
+
+    function handleUpdate(msg) {
+	update(msg.index, msg.attrs);
+    }
+
+    ret.insert = function (index, attrs) {
+	channel.send({type: "insert",
+		      index: index,
+		      attrs: attrs});
+    };
+
+    ret.remove = function (index) {
+	channel.send({type: "delete",
+		      index: index});
+    };
+
+    ret.update = function (index, attrs) {
+	channel.send({type: "update",
+		      index: index,
+		      attrs: attrs});
+    };
+
+    channel.setMsgHandler("insert", handleInsert);
+    channel.setMsgHandler("delete", handleDelete);
+    channel.setMsgHandler("update", handleUpdate);
+
+    return ret;
+}
+
+
 function jsonCmdServer(url) {
     var socket = new SockJS(url);
     var handlers = {};
 
     socket.onmessage = function (e) {
 	var message = JSON.parse(e.data);
+	console.log("-->" + e.data);
 	if (handlers[message.type]) {
 	    handlers[message.type](message);
 	}
     };
 
     return {
-	send: function (msg) { socket.send(JSON.stringify(msg)); },
+	send: function (msg) {
+	    msg = JSON.stringify(msg);
+	    console.log("<--" + msg);
+	    socket.send(msg);
+	},
 	setMsgHandler: function(message, handler) { handlers[message] = handler; },
 	setErrHandler: function(handler) {
 	    socket.onclose = handler;
@@ -237,9 +311,10 @@ function todoServer() {
     function load(id) {
 	return function () {
 	    var channel = chansrv.join(id);
-	    channel.setMsgHandler("insert", handleInsert);
-	    channel.setMsgHandler("delete", handleDelete);
-	    channel.setMsgHandler("update", handleUpdate);
+	    var lm = remoteListModel(channel, "New Item");
+	    list = editableList(lm, get("list"));
+	    body.setAttribute("curView", "listView");
+	    restyle();
 	};
     }
 
@@ -247,6 +322,11 @@ function todoServer() {
 	chansrv.send({type: "login",
 		      user: user,
 		      password: password});
+    }
+
+    function addList(name) {
+	control.send({"type": "create",
+		      "name": name});
     }
 
     function handleLogin() {
@@ -267,23 +347,6 @@ function todoServer() {
 	li.onclick = load(message.id);
     }
 
-    function showList(message) {
-	body.setAttribute("curView", "listView");
-	restyle();
-    }
-
-    function handleInsert(message) {
-	lm.insert(message.index, message.content);
-    }
-
-    function handleDelete(message) {
-	lm.remove(message.index);
-    }
-
-    function handleUpdate(message) {
-	lm.update(message.index, message.attrs.content);
-    }
-
     function handleError(msg) {
 	alert(msg.message);
     }
@@ -299,7 +362,8 @@ function todoServer() {
     chansrv.setMsgHandler("error", handleError);
 
     return {
-	login: doLogin
+	login: doLogin,
+	addList: addList
     };
 };
 
@@ -313,8 +377,7 @@ var loginBtn = get("doLogin");
 var loginView = get("loginView");
 var listView = get("listView");
 var managerView = get("managerView");
-var lm = listModel("New Item");
-var list = editableList(lm, get("list"));
+var list;
 var login = get("login");
 var password = get("password");
 
@@ -322,6 +385,10 @@ mobileScrollFix(get("screen"));
 
 loginBtn.onclick = function () {
     server.login(login.value, password.value);
+};
+
+newListBtn.onclick = function () {
+    server.addList("New List");
 };
 
 newBtn.onclick = function () {
