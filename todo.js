@@ -129,6 +129,8 @@ function editableList(model, ret) {
 	}
     };
 
+    ret.innerHTML = "";
+
     return ret;
 }
 
