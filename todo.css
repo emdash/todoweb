@@ -176,3 +176,23 @@ body[curView="listView"] #listView {
 #listView[editing="false"] #new, #listView[editing="false"] #drop {
     display: none;
 }
+
+.destroy {
+    display: inline-block;
+    color: grey;
+    background-color: white;
+    margin-right: 0.5em;
+    border-radius: 0.25em;
+    padding: 0.25em;
+    cursor: pointer;
+    user-select: none;
+}
+
+.destroy:hover {
+    color: black;
+}
+
+.destroy:active {
+    color: white;
+    background-color: black;
+}

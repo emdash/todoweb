@@ -7,64 +7,86 @@ function restyle() {
 }
 
 
-function editableList(model, ret) {
+function editableListItem(list, model, items) {
+    var item = el("div");
+    var content;
+
+    item.className = "listItem";
+
+    item.onfocus = function (evt) {
+	list.setSelected(item);
+	content = item.innerHTML;
+	setTimeout(
+	    function () {
+		document.getSelection().selectAllChildren(item);
+	    }, 1);
+    };
+
+    item.onblur = function (evt) {
+	if (item.innerHTML === content) {
+	    return;
+	}
+	item.setEditable(false);
+	model.update(items.indexOf(item), {content: item.getContent()});
+    };
+
+    item.getContent = function (content) {
+	return item.innerHTML;
+    };
+
+    item.setContent = function (content) {
+	item.innerHTML = content;
+    };
+
+    item.setEditable = function (editable) {
+	item.contentEditable = editable;
+    };
+
+    return item;
+}
+
+
+function todoListItem(list, model, items)
+{
+    var item = editableListItem(list, model, items);
+
+    item.onkeypress = function (evt) {
+	switch (evt.keyCode) {
+	case 13:
+	    model.insert(items.indexOf(item) + 1, {});
+	    evt.preventDefault();
+	    break;
+	};
+    };
+
+    item.onclick = function (evt) {
+	var completed;
+
+	if (editing == "false") {
+	    if (item.getAttribute("completed") == "true") {
+		completed = "false";
+	    } else {
+		completed = "true";
+	    }
+
+	    model.update(items.indexOf(item), {completed: completed});
+	}
+    };
+
+    return item;
+}
+
+
+function editableList(model, ret, listItem) {
     var items = [];
     var selected;
     var editing = "false";
 
-    function listItem() {
-	var item = el("div");
-	var content;
-
-	item.contentEditable = editing;
-	item.className = "listItem";
-
-	item.onkeypress = function (evt) {
-	    switch (evt.keyCode) {
-	    case 13:
-		model.insert(items.indexOf(item) + 1, {});
-		evt.preventDefault();
-		break;
-	    };
-	};
-
-	item.onfocus = function (evt) {
-	    selected = item;
-	    content = item.innerHTML;
-	    setTimeout(
-		function () {
-		    document.getSelection().selectAllChildren(item);
-		}, 1);
-	};
-
-	item.onblur = function (evt) {
-	    if (item.innerHTML === content) {
-		return;
-	    }
-	    item.contentEditable = false;
-	    model.update(items.indexOf(item), {content: item.innerHTML});
-	};
-
-	item.onclick = function (evt) {
-	    var completed;
-
-	    if (editing == "false") {
-		if (item.getAttribute("completed") == "true") {
-		    completed = "false";
-		} else {
-		    completed = "true";
-		}
-
-		model.update(items.indexOf(item), {completed: completed});
-	    }
-	};
-
-	return item;
-    };
-
-    model.itemAdded = function (index, attrs) {
-	var item = listItem();
+    function itemAdded(index, attrs) {
+	var item = listItem(ret, model, items);
 	var attr;
+
+	console.log("item added " + attrs.content);
 
 	ret.insertBefore(item, items[index]);
 	items.splice(index, 0, item);
@@ -73,10 +95,11 @@ function editableList(model, ret) {
 	    model.itemChanged(index, attr, attrs[attr]);
 	}
 
+	item.setEditable(editing);
 	item.focus();
-    };
+    }
 
-    model.itemChanged = function (index, attr, value) {
+    function itemChanged(index, attr, value) {
 	var item = items[index];
 
 	if (!item) {
@@ -84,17 +107,17 @@ function editableList(model, ret) {
 	}
 
 	if (attr == "content") {
-	    item.innerHTML = value;
+	    item.setContent(value);
 
 	    if (editing == "true") {
-		item.contentEditable = true;
+		item.setEditable(true);
 	    }
 	} else {
 	    item.setAttribute(attr, value);
 	}
-    };
+    }
 
-    model.itemRemoved = function (index) {
+    function itemRemoved(index) {
 	var item = items[index];
 	var unused = { focus: function () {}};
 	var hilight;
@@ -109,7 +132,7 @@ function editableList(model, ret) {
 	}
 
 	item && ret.removeChild(item);
-    };
+    }
 
     ret.append = function () {
 	model.insert(items.indexOf(selected) + 1, {});
@@ -121,15 +144,35 @@ function editableList(model, ret) {
 	}
     };
 
+    ret.getEditMode = function (mode) {
+	return editing;
+    };
+
     ret.setEditMode = function (mode) {
 	var li;
 	editing = mode;
 	for (li = ret.firstChild; li !== null; li = li.nextSibling) {
-	    li.contentEditable = mode;
+	    li.setEditable(mode);
 	}
     };
 
-    ret.innerHTML = "";
+    ret.setModel = function (newModel) {
+	model = newModel;
+
+	if (model) {
+	    model.itemAdded = itemAdded;
+	    model.itemChanged = itemChanged;
+	    model.itemRemoved = itemRemoved;
+	}
+
+	ret.innerHTML = "";
+    };
+
+    ret.setSelected = function (item) {
+	selected = item;
+    };
+
+    ret.setModel(model);
 
     return ret;
 }
@@ -167,6 +210,7 @@ function listModel(defaultItem) {
     };
 
     ret.insert = function(index, attrs) {
+	console.log("insert");
 	attrs.content = attrs.content || defaultItem;
 	items.splice(index, 0, attrs);
 	ret.itemAdded(index, attrs);
@@ -200,6 +244,11 @@ function remoteListModel(channel, defaultItem)
 	update(msg.index, msg.attrs);
     }
 
+    function handleDestroy(msg) {
+	alert("This list has been deleted");
+	document.body.setAttribute("curView", "managerView");
+    }
+
     ret.insert = function (index, attrs) {
 	channel.send({type: "insert",
 		      index: index,
@@ -220,6 +269,7 @@ function remoteListModel(channel, defaultItem)
     channel.setMsgHandler("insert", handleInsert);
     channel.setMsgHandler("delete", handleDelete);
     channel.setMsgHandler("update", handleUpdate);
+    channel.setMsgHandler("destroy", handleDestroy);
 
     return ret;
 }
@@ -250,6 +300,7 @@ function jsonCmdServer(url) {
     };
 }
 
+
 function channel(name, server) {
     var handlers = {};
 
@@ -271,6 +322,7 @@ function channel(name, server) {
 	setMsgHandler: function (msg, handler) { handlers[msg] = handler; }
     };
 }
+
 
 function channelServer(url) {
     var cmdserver = jsonCmdServer(url);
@@ -306,9 +358,124 @@ function channelServer(url) {
     };
 }
 
+
+function listManagerItem(list, model, items)
+{
+    var item = editableListItem(list, model, items);
+    var label = el("span");
+    var destroy = el("span");
+
+    item.appendChild(destroy);
+    item.appendChild(label);
+
+    item.focus = function () {
+	label.focus();
+	setTimeout(
+	    function() {
+		document.getSelection().selectAllChildren(label);
+	    }, 1);
+
+    };
+
+    item.setContent = function (content) {
+	label.innerHTML = content;
+    };
+
+    item.getContent = function (content) {
+	return label.innerHTML;
+    };
+
+    item.onclick = function (content) {
+	server.setList(item.id);
+    };
+
+    item.setEditable = function (editable) {
+	label.contentEditable = editable;
+    };
+
+    label.onclick = function (e) {
+	e.preventDefault();
+	e.stopPropagation();
+    };
+
+    label.onfocus = item.onfocus;
+    label.onblur = item.onblur;
+
+    destroy.appendChild(text("X"));
+    destroy.className = "destroy";
+
+    destroy.onclick = function (e) {
+	model.remove(item.id);
+	e.preventDefault();
+	e.stopPropagation();
+	return false;
+    };
+
+    return item;
+}
+
+
+function listManagerModel(channel) {
+    var ret = listModel("Untitled");
+    var insert = ret.insert;
+    var update = ret.update;
+    var remove = ret.remove;
+    var lists = {};
+    var byIndex = [];
+    var curlist = 0;
+
+    function handleListRename(msg) {
+	update(lists[msg.id],
+	       {content: msg.name});
+    }
+
+    function handleListAdded(msg) {
+	console.log("list: " + msg.name);
+	insert(ret.getLength(), {content: msg.name, id:msg.id});
+	byIndex[curlist] = msg.id;
+	lists[msg.id] = curlist++;
+    }
+
+    function handleListDelete(msg) {
+	var id = msg.id;
+	var index = lists[msg.id];
+
+	console.log("delete list: " + id);
+	remove(index);
+	delete lists[id];
+	byIndex.splice(index, 1);
+    }
+
+    ret.insert = function (index, attrs) {
+	channel.send({type: "create",
+		      name: attrs.content || "Untitled List"});
+    };
+
+    ret.update = function (index, attrs) {
+	channel.send({type: "rename",
+		      id: byIndex[index],
+		      name: attrs.content});
+    };
+
+    ret.remove = function (id) {
+	if (confirm("Are you sure?")) {
+	    channel.send({type: "delete",
+			  id: id});
+	}
+    };
+
+    channel.setMsgHandler("list-added", handleListAdded);
+    channel.setMsgHandler("list-rename", handleListRename);
+    channel.setMsgHandler("list-delete", handleListDelete);
+    channel.send({"type": "get-lists"});
+
+    return ret;
+}
+
+
 function todoServer() {
     var chansrv;
-    var control;
+    var body = document.body;
 
     function connect() {
 	chansrv = channelServer("http://" + window.location.host + ":8080/todo");
@@ -317,14 +484,11 @@ function todoServer() {
 	chansrv.setMsgHandler("error", handleError);
     }
 
-    function load(id) {
-	return function () {
-	    var channel = chansrv.join(id);
-	    var lm = remoteListModel(channel, "New Item");
-	    list = editableList(lm, get("list"));
-	    body.setAttribute("curView", "listView");
-	    restyle();
-	};
+    function setList(id) {
+	var channel = chansrv.join(id);
+	list.setModel(remoteListModel(channel, "New Item"));
+	body.setAttribute("curView", "listView");
+	restyle();
     }
 
     function doLogin(user, password) {
@@ -333,27 +497,10 @@ function todoServer() {
 		      password: password});
     }
 
-    function addList(name) {
-	control.send({"type": "create",
-		      "name": name});
-    }
-
     function handleLogin() {
-	control = chansrv.join("control");
-	control.setMsgHandler("list-added", handleListAdded);
-	control.send({"type": "get-lists"});
+	listOfLists.setModel(listManagerModel(chansrv.join("control")));
 	body.setAttribute("curView", "managerView");
 	restyle();
-    }
-
-    function handleListAdded(message) {
-	var li;
-
-	li = el("div");
-	li.appendChild(text(message.name));
-	li.className = "listItem";
-	managerView.appendChild(li);
-	li.onclick = load(message.id);
     }
 
     function handleError(msg) {
@@ -371,32 +518,34 @@ function todoServer() {
 
     return {
 	login: doLogin,
-	addList: addList
+	setList: setList
     };
 };
 
 var server = todoServer();
-var body = document.body;
 var doneBtn = get("done");
 var dropBtn = get("drop");
 var newBtn = get("new");
+var newListBtn = get("newList");
 var showBtn = get("show");
 var loginBtn = get("doLogin");
 var loginView = get("loginView");
 var listView = get("listView");
 var managerView = get("managerView");
-var list;
+var list = editableList(null, get("list"), todoListItem);
+var listOfLists = editableList(null, get("listOfLists"), listManagerItem);
 var login = get("login");
 var password = get("password");
 
 mobileScrollFix(get("screen"));
+listOfLists.setEditMode(true);
 
 loginBtn.onclick = function () {
     server.login(login.value, password.value);
 };
 
 newListBtn.onclick = function () {
-    server.addList("New List");
+    listOfLists.append();
 };
 
 newBtn.onclick = function () {
