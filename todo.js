@@ -13,13 +13,19 @@ function editableListItem(list, model, items) {
 
     item.className = "listItem";
 
+    item.onkeypress = function (evt) {
+	switch (evt.keyCode) {
+	case 13:
+	    item.onEnterKey();
+	    evt.preventDefault();
+	    break;
+	};
+    };
+
     item.onfocus = function (evt) {
 	list.setSelected(item);
-	content = item.innerHTML;
-	setTimeout(
-	    function () {
-		document.getSelection().selectAllChildren(item);
-	    }, 1);
+	content = item.getContent();
+	setTimeout(item.selectAll, 1);
     };
 
     item.onblur = function (evt) {
@@ -30,8 +36,16 @@ function editableListItem(list, model, items) {
 	model.update(items.indexOf(item), {content: item.getContent()});
     };
 
+    item.onEnterKey = function (content) {
+	item.blur();
+    };
+
     item.getContent = function (content) {
 	return item.innerHTML;
+    };
+
+    item.selectAll = function () {
+	document.getSelection().selectAllChildren(item);
     };
 
     item.setContent = function (content) {
@@ -50,19 +64,14 @@ function todoListItem(list, model, items)
 {
     var item = editableListItem(list, model, items);
 
-    item.onkeypress = function (evt) {
-	switch (evt.keyCode) {
-	case 13:
-	    model.insert(items.indexOf(item) + 1, {});
-	    evt.preventDefault();
-	    break;
-	};
+    item.onEnterKey = function (evt) {
+	model.insert(items.indexOf(item) + 1, {});
     };
 
     item.onclick = function (evt) {
 	var completed;
 
-	if (editing == "false") {
+	if (list.getEditMode() == "false") {
 	    if (item.getAttribute("completed") == "true") {
 		completed = "false";
 	    } else {
@@ -370,11 +379,10 @@ function listManagerItem(list, model, items)
 
     item.focus = function () {
 	label.focus();
-	setTimeout(
-	    function() {
-		document.getSelection().selectAllChildren(label);
-	    }, 1);
+    };
 
+    item.blur = function () {
+	label.blur();
     };
 
     item.setContent = function (content) {
@@ -387,6 +395,10 @@ function listManagerItem(list, model, items)
 
     item.onclick = function (content) {
 	server.setList(item.id);
+    };
+
+    item.selectAll = function (editable) {
+	document.getSelection().selectAllChildren(label);
     };
 
     item.setEditable = function (editable) {
@@ -504,7 +516,7 @@ function todoServer() {
     }
 
     function handleError(msg) {
-	alert(msg.message);
+	console.log("protocol error: " + JSON.stringify(msg));
     }
 
     function handleSocketError() {
