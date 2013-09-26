@@ -490,7 +490,7 @@ function todoServer() {
     var body = document.body;
 
     function connect() {
-	chansrv = channelServer("http://" + window.location.host + ":8080/todo");
+	chansrv = channelServer("http://" + window.location.hostname + ":8000/todo");
 	chansrv.setErrHandler(handleSocketError);
 	chansrv.setMsgHandler("login", handleLogin);
 	chansrv.setMsgHandler("error", handleError);
@@ -521,9 +521,9 @@ function todoServer() {
 
     function handleSocketError() {
 	body.setAttribute("curView", "loginView");
-	alert("Lost connection to server.");
+	alert("Lost connection to server. Reconnecting in 2 seconds.");
 	restyle();
-	connect();
+	setTimeout(connect, 2000);
     }
 
     connect();
