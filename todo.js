@@ -1,5 +1,11 @@
-todolist = (function () {
+todo = (function () {
 "use strict";
+var ret = {};
+var server = todoClient();
+var list = editableList.list(null, get("list"), todoListItem);
+var listOfLists = editableList.list(null, get("listOfLists"), listManagerItem);
+var login = get("login");
+var password = get("password");
 
 
 function todoListItem(list, model, items)
@@ -244,61 +250,50 @@ function todoClient() {
     };
 };
 
-var server = todoClient();
-var doneBtn = get("done");
-var dropBtn = get("drop");
-var newBtn = get("new");
-var newListBtn = get("newList");
-var showBtn = get("show");
-var loginBtn = get("doLogin");
-var loginView = get("loginView");
-var listView = get("listView");
-var managerView = get("managerView");
-var list = editableList.list(null, get("list"), todoListItem);
-var listOfLists = editableList.list(null, get("listOfLists"), listManagerItem);
-var login = get("login");
-var password = get("password");
 
 mobileScrollFix(get("screen"));
 listOfLists.setEditMode(true);
 
-loginBtn.onclick = function () {
+ret.login = function () {
     server.login(login.value, password.value);
 };
 
-newListBtn.onclick = function () {
+ret.newList = function () {
     listOfLists.append();
 };
 
-newBtn.onclick = function () {
+ret.newListItem = function () {
     list.append();
 };
 
-dropBtn.onclick = function () {
+ret.dropListItem = function () {
     list.remove();
 };
 
-doneBtn.onclick = function () {
-    if (doneBtn.innerHTML === "Edit") {
+// factor the following into a reusable two-state toggle
+ret.toggleEdit = function (btn) {
+    if (btn.innerHTML === "Edit") {
 	list.setEditMode("true");
 	listView.setAttribute("editing", "true");
-	doneBtn.innerHTML = "Done";
+	btn.innerHTML = "Done";
     } else {
 	list.setEditMode("false");
 	listView.setAttribute("editing", "false");
-	doneBtn.innerHTML = "Edit";
+	btn.innerHTML = "Edit";
     }
     restyle();
 };
 
-showBtn.onclick = function () {
-    if (showBtn.innerHTML === "Show Completed") {
+ret.toggleShowCompleted = function (btn) {
+    if (btn.innerHTML === "Show Completed") {
 	list.setAttribute("showCompleted", "true");
-	showBtn.innerHTML = "Hide Completed";
+	btn.innerHTML = "Hide Completed";
     } else {
 	list.setAttribute("showCompleted", "false");
-	showBtn.innerHTML = "Show Completed";
+	btn.innerHTML = "Show Completed";
     }
     restyle();
 };
+
+return ret;
 })();

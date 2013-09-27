@@ -8,38 +8,50 @@
     <script src="../common/sockjs-0.3.min.js"></script>
     <script src="../common/jsonSocket.js"></script>
     <script src="../common/channels.js"></script>
-  </head>
+   </head>
 
-  <body curView="loginView">
-    <div id="loginView">
-      <table>
-	<tr>
-	  <td>Login:</td><td><input id="login" size="8"></td>
-	</tr>
-	<tr>
-	  <td>Password:</td><td><input type="password" id="password" size="8"></td>
-	</tr>
-      </table>
-      <div id="doLogin">Login</div>
-    </div>
+   <body curView="loginView">
+     <div id="loginView">
+       <table>
+	 <tr>
+	   <td>Login:</td><td><input id="login" size="8"></td>
+	 </tr>
+	 <tr>
+	   <td>Password:</td><td><input type="password" id="password" size="8"></td>
+	 </tr>
+       </table>
+       <div id="doLogin" onclick="todo.login()">Login</div>
+     </div>
 
-    <div id="managerView">
-      <div>Saved Lists</div>
-      <div id="listOfLists"></div>
-      <span class="todoButton" id="newList" onclick="">Create List</a>
-    </div>
+     <div id="managerView">
+       <div>Saved Lists</div>
+       <div id="listOfLists"></div>
+       <span class="todoButton" onclick="todo.newList()">Create List</a>
+     </div>
 
-    <div id="listView" editing="false">
-      <div id="screen">
-	<div id="list" showCompleted="false">
-	</div>
-      </div>
-      <div id="controls" align="center">
- 	<span style="float: left;">
-	  <span class="todoButton" id="done">Edit</span>
-	  <span class="todoButton" id="show">Show Completed</span>
-	  <span class="todoButton" id="drop" style="width: 1em">-</span>
-	  <span class="todoButton" id="new" style="width: 1em">+</span>
+     <div id="listView" editing="false">
+       <div id="screen">
+	 <div id="list" showCompleted="false">
+	 </div>
+       </div>
+       <div id="controls" align="center">
+	 <span style="float: left;">
+	   <span class="todoButton"
+		 id="edit"
+		 onclick="todo.toggleEdit(this)">Edit</span>
+	   <span class="todoButton"
+		 id="show"
+		 onclick="todo.toggleShowCompleted(this)">
+	     Show Completed
+	   </span>
+	  <span class="todoButton"
+		id="drop"
+		style="width: 1em"
+		onclick="todo.dropListItem()">-</span>
+	  <span class="todoButton"
+		id="new"
+		style="width: 1em"
+		onclick="todo.newListItem()">+</span>
 	</span>
       </div>
     </div>
