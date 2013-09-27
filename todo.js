@@ -78,90 +78,6 @@ function remoteListModel(channel, defaultItem)
 }
 
 
-function jsonCmdServer(url) {
-    var socket = new SockJS(url);
-    var handlers = {};
-
-    socket.onmessage = function (e) {
-	var message = JSON.parse(e.data);
-	console.log("-->" + e.data);
-	if (handlers[message.type]) {
-	    handlers[message.type](message);
-	}
-    };
-
-    return {
-	send: function (msg) {
-	    msg = JSON.stringify(msg);
-	    console.log("<--" + msg);
-	    socket.send(msg);
-	},
-	setMsgHandler: function(message, handler) { handlers[message] = handler; },
-	setErrHandler: function(handler) {
-	    socket.onclose = handler;
-	}
-    };
-}
-
-
-function channel(name, server) {
-    var handlers = {};
-
-    function handleMessage(msg) {
-	if (handlers[msg.type]) {
-	    handlers[msg.type](msg);
-	}
-    }
-
-    function sendMessage(msg) {
-	server.send({type: "send",
-		     name: name,
-		     content: msg});
-    }
-
-    return {
-	handle: handleMessage,
-	send: sendMessage,
-	setMsgHandler: function (msg, handler) { handlers[msg] = handler; }
-    };
-}
-
-
-function channelServer(url) {
-    var cmdserver = jsonCmdServer(url);
-    var channels = {};
-
-    function handleChannelMessage(message) {
-	if (channels[message.name]) {
-	    channels[message.name].handle(message.content);
-	}
-    }
-
-    function joinChannel(name, handler) {
-	cmdserver.send({type: "join",
-			name: name});
-	return channels[name] = channel(name, cmdserver);
-    }
-
-    function leaveChannel(name) {
-	cmdserver.send({type: "leave",
-			name: name});
-	delete channels[name];
-    }
-
-    cmdserver.setMsgHandler("channel-message", handleChannelMessage);
-
-    return {
-	send: cmdserver.send,
-	setMsgHandler: cmdserver.setMsgHandler,
-	setErrHandler: cmdserver.setErrHandler,
-	login: doLogin,
-	join: joinChannel,
-	leave: leaveChannel
-    };
-}
-
-
 function listManagerItem(list, model, items)
 {
     var item = editableList.item(list, model, items);
@@ -279,32 +195,32 @@ function listManagerModel(channel) {
 }
 
 
-function todoServer() {
-    var chansrv;
+function todoClient() {
+    var sock;
     var body = document.body;
 
     function connect() {
-	chansrv = channelServer("http://" + window.location.hostname + ":8000/todo");
-	chansrv.setErrHandler(handleSocketError);
-	chansrv.setMsgHandler("login", handleLogin);
-	chansrv.setMsgHandler("error", handleError);
+	sock = channels.socket("http://" + window.location.hostname + ":8000/todo");
+	sock.setErrHandler(handleSocketError);
+	sock.setMsgHandler("login", handleLogin);
+	sock.setMsgHandler("error", handleError);
     }
 
     function setList(id) {
-	var channel = chansrv.join(id);
+	var channel = sock.join(id);
 	list.setModel(remoteListModel(channel, "New Item"));
 	body.setAttribute("curView", "listView");
 	restyle();
     }
 
     function doLogin(user, password) {
-	chansrv.send({type: "login",
-		      user: user,
-		      password: password});
+	sock.send({type: "login",
+		   user: user,
+		   password: password});
     }
 
     function handleLogin() {
-	listOfLists.setModel(listManagerModel(chansrv.join("control")));
+	listOfLists.setModel(listManagerModel(sock.join("control")));
 	body.setAttribute("curView", "managerView");
 	restyle();
     }
@@ -328,7 +244,7 @@ function todoServer() {
     };
 };
 
-var server = todoServer();
+var server = todoClient();
 var doneBtn = get("done");
 var dropBtn = get("drop");
 var newBtn = get("new");
