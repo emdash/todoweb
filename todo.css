@@ -110,7 +110,7 @@ body[curView="listView"] #listView {
     padding: 10px;
 }
 
-.todoButton {
+push-button, toggle-button {
     border: hidden;
     background-color: white;
     padding: 10;
@@ -123,11 +123,11 @@ body[curView="listView"] #listView {
     user-select: none;
 }
 
-.todoButton:hover {
+push-button:hover, toggle-button:hover {
     background-color: grey
 }
 
-.todoButton:active {
+push-button:active, toggle-button:active {
     background-color: black;
     color: white;
 }
@@ -153,27 +153,27 @@ body[curView="listView"] #listView {
     text-decoration: line-through;
 }
 
-#listView[editing="true"] .listItem[contentEditable="false"] {
+editable-list[editable="true"] .listItem[contentEditable="false"] {
     color: grey;
     cursor: progress;
 }
 
-#listView[editing="true"] .listItem[contentEditable="false"]:after {
+editable-list[editable="true"] .listItem[contentEditable="false"]:after {
     margin-left: 5px;
     font-size: 6pt;
     content: "Updating...";
     vertical-align: middle;
 }
 
-#listView[editing="false"] #list[showCompleted="false"] .listItem[completed=true] {
+editable-list[editable="false"][showCompleted="false"] .listItem[completed=true] {
     display:none;
 }
 
-#listView[editing="true"] #show {
+#listView[editing="false"] #drop {
     display: none;
 }
 
-#listView[editing="false"] #new, #listView[editing="false"] #drop {
+#listView[editing="false"] #new {
     display: none;
 }
 

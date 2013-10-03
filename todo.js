@@ -2,13 +2,9 @@ todo = (function () {
 "use strict";
 var ret = {};
 var server = todoClient();
-var list = editableList.list(null, get("list"), todoListItem);
-var listOfLists = editableList.list(null, get("listOfLists"), listManagerItem);
-var login = get("login");
-var password = get("password");
 
 
-function todoListItem(list, model, items)
+ret.todoListItem = function(list, model, items)
 {
     var item = editableList.item(list, model, items);
 
@@ -19,7 +15,7 @@ function todoListItem(list, model, items)
     item.onclick = function (evt) {
 	var completed;
 
-	if (list.getEditMode() == "false") {
+	if (list.getEditMode() === false) {
 	    if (item.getAttribute("completed") == "true") {
 		completed = "false";
 	    } else {
@@ -31,7 +27,7 @@ function todoListItem(list, model, items)
     };
 
     return item;
-}
+};
 
 
 function remoteListModel(channel, defaultItem)
@@ -84,7 +80,7 @@ function remoteListModel(channel, defaultItem)
 }
 
 
-function listManagerItem(list, model, items)
+ret.listManagerItem = function (list, model, items)
 {
     var item = editableList.item(list, model, items);
     var label = el("span");
@@ -140,7 +136,7 @@ function listManagerItem(list, model, items)
     };
 
     return item;
-}
+};
 
 
 function listManagerModel(channel) {
@@ -252,47 +248,9 @@ function todoClient() {
 
 
 mobileScrollFix(get("screen"));
-listOfLists.setEditMode(true);
 
 ret.login = function () {
     server.login(login.value, password.value);
-};
-
-ret.newList = function () {
-    listOfLists.append();
-};
-
-ret.newListItem = function () {
-    list.append();
-};
-
-ret.dropListItem = function () {
-    list.remove();
-};
-
-// factor the following into a reusable two-state toggle
-ret.toggleEdit = function (btn) {
-    if (btn.innerHTML === "Edit") {
-	list.setEditMode("true");
-	listView.setAttribute("editing", "true");
-	btn.innerHTML = "Done";
-    } else {
-	list.setEditMode("false");
-	listView.setAttribute("editing", "false");
-	btn.innerHTML = "Edit";
-    }
-    restyle();
-};
-
-ret.toggleShowCompleted = function (btn) {
-    if (btn.innerHTML === "Show Completed") {
-	list.setAttribute("showCompleted", "true");
-	btn.innerHTML = "Hide Completed";
-    } else {
-	list.setAttribute("showCompleted", "false");
-	btn.innerHTML = "Show Completed";
-    }
-    restyle();
 };
 
 return ret;
