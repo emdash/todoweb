@@ -177,6 +177,10 @@ editable-list[editable="false"][showCompleted="false"] .listItem[completed=true]
     display: none;
 }
 
+#listView[editing="true"] #show {
+    display: none;
+}
+
 .destroy {
     display: inline-block;
     color: grey;
