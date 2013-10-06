@@ -33,32 +33,34 @@
 
 
      <page id="managerView">
-       <div>Saved Lists</div>
-       <editable-list id="listOfLists"
-		      editable="true"
-		      listItem="todo.listManagerItem">
-	 No lists
-       </editable-list>
-       <a onclick="listOfLists.append()">Create List</a>
+       <header>Saved Lists</header>
+       <content>
+	 <editable-list
+	    id="listOfLists"
+	    editable="true"
+	    listItem="todo.listManagerItem">No lists</editable-list>
+       </content>
+       <button-bar>
+	 <push-button
+	    onclick="listOfLists.append()">Create List</push-button>
+       </button-bar>
      </page>
 
 
      <page id="listView" editing="false">
-       <div id="screen">
-	 <editable-list id="list"
-			showCompleted="false"
-			insertOnEnter="true"
-			listItem="todo.todoListItem">
-	   No items
-	 </editable-list>
+       <header id="listViewHeader"></header>
+       <content>
+	 <editable-list
+	    id="list"
+	    showCompleted="false"
+	    listItem="todo.todoListItem">No items</editable-list>
 	 <script>
 	   DOMAttrModified(list, "editable", function() {
 	     listView.setAttribute("editing", list.getAttribute("editable"));
 	   });
 	 </script>
-       </div>
-
-       <div id="controls" align="center">
+       </content>
+       <button-bar>
 	 <span style="float: left;">
 	   <toggle-button
 	      onclick="list.setEditMode(!list.getEditMode());"
@@ -85,7 +87,7 @@
 	      id="new"
 	      onclick="list.append()">+</push-button>
 	 </span>
-       </div>
+       </button-bar>
      </page>
      <script src="todo.js"></script>
    </body>

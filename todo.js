@@ -215,6 +215,7 @@ function todoClient() {
 
 	list.setModel(lists[id]);
 	setCurrentPage("listView", name);
+	listViewHeader.innerHTML = name;
     }
 
     function doLogin(user, password) {
@@ -248,9 +249,6 @@ function todoClient() {
 	setList: setList
     };
 };
-
-
-mobileScrollFix(get("screen"));
 
 ret.login = function () {
     server.login(login.value, password.value);

@@ -85,30 +85,51 @@ body[curView="listView"] #listView {
     display: block;
 }
 
-#screen {
-    position: absolute;
-    overflow-y: auto;
-    overflow-x: hidden;
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 100px;
-}
-
 #list {
     width: 100%;
     height: 100%;
 }
 
-#controls {
+/* These stay anchored to th top and bottom of the viewport. Content
+will appear underneath them, so it must be padded. */
+
+button-bar {
     position: fixed;
     left: 0px;
     right: 0px;
     bottom: 0px;
-    font-size: 1rem;
     background-color: #CCCCCC;
     padding: 10px;
+    box-shadow: 0 0 .5em black;
 }
+
+header {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    padding: 10px;
+    background-color: black;
+    color: white;
+    font-size: small;
+    box-shadow: 0 0 .5em black;
+}
+
+content:before {
+    display: block;
+    padding: 20px;
+    font-size: small;
+    content: " ";
+}
+
+content:after {
+    display: block;
+    padding: 30px;
+    margin-top: 10px;
+    font-size: 1rem;
+    content: " ";
+}
+
 
 push-button, toggle-button {
     border: hidden;
