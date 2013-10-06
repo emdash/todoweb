@@ -12,7 +12,7 @@
    </head>
 
    <body curView="loginView">
-     <div id="loginView">
+     <page id="loginView">
        <table>
 	 <tr>
 	   <td>Login:</td>
@@ -29,10 +29,10 @@
        </table>
        <div id="doLogin"
 	    onclick="todo.login(login.value, password.value)">Login</div>
-     </div>
+     </page>
 
 
-     <div id="managerView">
+     <page id="managerView">
        <div>Saved Lists</div>
        <editable-list id="listOfLists"
 		      editable="true"
@@ -40,10 +40,10 @@
 	 No lists
        </editable-list>
        <a onclick="listOfLists.append()">Create List</a>
-     </div>
+     </page>
 
 
-     <div id="listView" editing="false">
+     <page id="listView" editing="false">
        <div id="screen">
 	 <editable-list id="list"
 			showCompleted="false"
@@ -86,8 +86,7 @@
 	      onclick="list.append()">+</push-button>
 	 </span>
        </div>
-     </div>
-     
+     </page>
      <script src="todo.js"></script>
-</body>
+   </body>
 </html>

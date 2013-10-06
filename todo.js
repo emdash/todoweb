@@ -51,7 +51,6 @@ function remoteListModel(channel, defaultItem)
 
     function handleDestroy(msg) {
 	alert("This list has been deleted");
-	document.body.setAttribute("curView", "managerView");
     }
 
     ret.insert = function (index, attrs) {
@@ -106,7 +105,7 @@ ret.listManagerItem = function (list, model, items)
     };
 
     item.onclick = function (content) {
-	server.setList(item.id);
+	server.setList(item.id, label.innerHTML);
     };
 
     item.selectAll = function (editable) {
@@ -200,6 +199,7 @@ function listManagerModel(channel) {
 function todoClient() {
     var sock;
     var body = document.body;
+    var lists;
 
     function connect() {
 	sock = channels.socket("http://" + window.location.hostname + ":8000/todo");
@@ -208,11 +208,13 @@ function todoClient() {
 	sock.setMsgHandler("error", handleError);
     }
 
-    function setList(id) {
-	var channel = sock.join(id);
-	list.setModel(remoteListModel(channel, "New Item"));
-	body.setAttribute("curView", "listView");
-	restyle();
+    function setList(id, name) {
+	if (!lists[id]) {
+	    lists[id] = remoteListModel(sock.join(id), "New Item");
+	}
+
+	list.setModel(lists[id]);
+	setCurrentPage("listView", name);
     }
 
     function doLogin(user, password) {
@@ -222,8 +224,9 @@ function todoClient() {
     }
 
     function handleLogin() {
+	lists = {};
 	listOfLists.setModel(listManagerModel(sock.join("control")));
-	body.setAttribute("curView", "managerView");
+	setCurrentPage("managerView");
 	restyle();
     }
 
@@ -232,7 +235,7 @@ function todoClient() {
     }
 
     function handleSocketError() {
-	body.setAttribute("curView", "loginView");
+	setCurrentPage("loginView");
 	alert("Lost connection to server. Reconnecting in 2 seconds.");
 	restyle();
 	setTimeout(connect, 2000);
@@ -251,6 +254,18 @@ mobileScrollFix(get("screen"));
 
 ret.login = function () {
     server.login(login.value, password.value);
+};
+
+window.onpopstate = function (event) {
+    document.body.setAttribute("curView", event.state.page);
+    document.title = event.state.title;
+};
+
+function setCurrentPage(page, title) {
+    var full_title = "Todo" + (title ? " - " + title : "");
+    document.body.setAttribute("curView", page);
+    history.pushState({page: page, title: full_title}, null);
+    document.title = full_title;
 };
 
 return ret;

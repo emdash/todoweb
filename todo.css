@@ -21,7 +21,7 @@ input {
     width: auto;
 }
 
-#loginView {
+page {
     display: none;
     position: absolute;
     left: 0px;
