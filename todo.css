@@ -10,16 +10,37 @@
     }
 }
 
-.hidden {
-    display: none;
+
+/* These rules are used to implement the page switching behavior, as
+   the entire app is contained within a single HTML page. <page>
+   elements are invisible by default, so these rules show a given page
+   when it matches the body's curView attribute. */
+
+body[curView="loginView"] #loginView {
+    display: block;
 }
 
-input {
-    border: hidden;
-    font-size: 1rem;
-    margin: 0px;
-    width: auto;
+body[curView="managerView"] #managerView {
+    display: block;
 }
+
+body[curView="listView"] #listView {
+    display: block;
+}
+
+
+/* The body of this document is subdivided into several <page>
+   elements. These in turn have the following structure:
+
+   - <header> (optional)
+   - <content> (reqiured if <header> or <button-bar> present)
+   - <button-bar> (optional)
+
+   The header and button bar are anchored to top and bottom of the
+   page, respectively. Since content will render under them in the Z
+   order, the :before and :after pseudo-elements are used to pad
+   it. We also add drop shadows with a slightly different color for
+   header and footer to simualte an inset shadow. */
 
 page {
     display: none;
@@ -28,79 +49,6 @@ page {
     right: 0px;
     top: 0px;
     bottom: 0px;
-}
-
-body[curView="loginView"] #loginView {
-    display: block;
-}
-
-#loginview table {
-    height: 4em;
-    background-color: #CCCCCC;
-    margin-left: auto;
-    margin-right: auto;
-    vertical-align: middle;
-    text-align: right;
-    padding: 10px;
-    margin-top: 5px;
-    font-size: 1rem;
-}
-
-#doLogin {
-    background-color: #CCCCCC;
-    padding: 10px;
-    display: table;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 5px;
-    cursor: pointer;
-    -moz-user-select: none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-}
-
-#doLogin:hover {
-    background-color: grey;
-}
-
-#doLogin:active {
-    background-color: black;
-    color: white;
-}
-
-#managerView {
-    display: none;
-}
-
-body[curView="managerView"] #managerView {
-    display: block;
-}
-
-#listView {
-    display: none;
-}
-
-body[curView="listView"] #listView {
-    display: block;
-}
-
-#list {
-    width: 100%;
-    height: 100%;
-}
-
-/* These stay anchored to th top and bottom of the viewport. Content
-will appear underneath them, so it must be padded. */
-
-button-bar {
-    position: fixed;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    background-color: #CCCCCC;
-    padding: 10px;
-    box-shadow: 0 0 .5em black;
 }
 
 header {
@@ -112,7 +60,17 @@ header {
     background-color: black;
     color: white;
     font-size: small;
-    box-shadow: 0 0 .5em black;
+    box-shadow: 0.05em 0.1em .2em .1em black;
+}
+
+button-bar {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    background-color: #CCCCCC;
+    padding: 10px;
+    box-shadow: 0.05em 0.05em 0.2em .1em silver;
 }
 
 content:before {
@@ -131,21 +89,21 @@ content:after {
 }
 
 
+/* These rules give the basic styling for the interactive elements. */
+
 push-button, toggle-button {
     border: hidden;
     background-color: white;
     padding: 10;
     margin: 5;
     float: left;
+    text-align: center;
     cursor: pointer;
     -moz-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     user-select: none;
-}
-
-push-button:hover, toggle-button:hover {
-    background-color: grey
+    border-radius: 5px;
 }
 
 push-button:active, toggle-button:active {
@@ -160,7 +118,7 @@ push-button:active, toggle-button:active {
     background-color: #CCCCCC;
 }
 
-.listItem:hover {
+.listItem:active {
     background-color: #AAAAAA;
 }
 
@@ -173,6 +131,32 @@ push-button:active, toggle-button:active {
     color: grey;
     text-decoration: line-through;
 }
+
+.destroy {
+    display: inline-block;
+    color: grey;
+    background-color: white;
+    margin-right: 0.5em;
+    border-radius: 0.25em;
+    padding: 0.25em;
+    cursor: pointer;
+    user-select: none;
+}
+
+.destroy:active {
+    color: white;
+    background-color: black;
+}
+
+
+/* These rules handle "completed" list items. There's some tricky
+   logic here:
+
+   - When completed items are visible, show them as greyed and crossed
+     out. 
+   - When we are editing the list, make completed items visible.
+   - When we are not editing the list, only show completed items when
+     showCompleted is true. */
 
 editable-list[editable="true"] .listItem[contentEditable="false"] {
     color: grey;
@@ -190,6 +174,11 @@ editable-list[editable="false"][showCompleted="false"] .listItem[completed=true]
     display:none;
 }
 
+
+/* These rules control the visibility of certain controls in #listView.
+   - #drop, #new are only visible in editing mode
+   - #show is only visible when not in editing mode */
+
 #listView[editing="false"] #drop {
     display: none;
 }
@@ -202,22 +191,63 @@ editable-list[editable="false"][showCompleted="false"] .listItem[completed=true]
     display: none;
 }
 
-.destroy {
+
+/* Ad-hoc rules for the loginView */
+
+input {
+    right: 0;
+    font-size: 1rem;
+    margin: 0px;
+    width: 8em;
+    border: 1px solid black;
+    padding: 3px;
+}
+
+
+#loginControls row {
+    display: block;
+    width: auto;
+    padding: 10px;
+}
+
+label {
+    float: left;
+    clear: left;
+    width: 5em;
+    text-align: right;
+}
+
+#loginControls {
+    text-align: center;
+    display: block;
+    margin: auto;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    width: 15em;
+    height: 10em;
+}
+
+#doLogin {
+    background-color: #CCCCCC;
+    padding: 10px;
     display: inline-block;
-    color: grey;
-    background-color: white;
-    margin-right: 0.5em;
-    border-radius: 0.25em;
-    padding: 0.25em;
+    margin-top: 10px;
     cursor: pointer;
+    width: 100%;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
     user-select: none;
+    border-radius: 5px;
 }
 
-.destroy:hover {
-    color: black;
-}
-
-.destroy:active {
-    color: white;
+#doLogin:active {
     background-color: black;
+    color: white;
+}
+
+
+#loginview {
+    vertical-align: middle;
+    text-align: center;
 }

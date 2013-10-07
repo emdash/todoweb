@@ -1,6 +1,6 @@
 <html>
   <head>
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
     <title>Todo</title>
     <link href="todo.css" rel="stylesheet" type="text/css" />
     <script src="../common/util.js"></script>
@@ -13,33 +13,31 @@
 
    <body curView="loginView">
      <page id="loginView">
-       <table>
-	 <tr>
-	   <td>Login:</td>
-	   <td>
-	     <input id="login" size="8">
-	   </td>
-	 </tr>
-	 <tr>
-	   <td>Password:</td>
-	   <td>
-	     <input type="password" id="password" size="8">
-	   </td>
-	 </tr>
-       </table>
+       <div id="loginControls">
+       <row>
+	 <label for="login">Login</label>
+	 <input id="login" size="8">
+       </row>
+       <row>
+	 <label for="password">Password</label>
+	 <input type="password" id="password" size="8">
+       </row>
        <div id="doLogin"
 	    onclick="todo.login(login.value, password.value)">Login</div>
+       </div>
      </page>
 
 
      <page id="managerView">
        <header>Saved Lists</header>
+
        <content>
 	 <editable-list
 	    id="listOfLists"
 	    editable="true"
 	    listItem="todo.listManagerItem">No lists</editable-list>
        </content>
+
        <button-bar>
 	 <push-button
 	    onclick="listOfLists.append()">Create List</push-button>
@@ -49,46 +47,48 @@
 
      <page id="listView" editing="false">
        <header id="listViewHeader"></header>
+
        <content>
 	 <editable-list
 	    id="list"
 	    showCompleted="false"
 	    listItem="todo.todoListItem">No items</editable-list>
-	 <script>
-	   DOMAttrModified(list, "editable", function() {
-	     listView.setAttribute("editing", list.getAttribute("editable"));
-	   });
-	 </script>
        </content>
+
        <button-bar>
-	 <span style="float: left;">
-	   <toggle-button
-	      onclick="list.setEditMode(!list.getEditMode());"
-	      attr="editable"
-	      target="list"
-	      enabledText="Done"
-	      disabledText="Edit">Edit</toggle-button>
-
-	   <toggle-button
-	      id="show"
-	      attr="showCompleted"
-	      target="list"
-	      enabledText="Hide Completed"
-	      disabledText="Show Completed"
-	      >Show Completed</toggle-button>
-	   
-	   <push-button
-	      style="width: 1em"
-	      id="drop"
-	      onclick="list.remove()">-</push-button>
-
-	   <push-button
-	      style="width: 1em"
-	      id="new"
-	      onclick="list.append()">+</push-button>
-	 </span>
+	 <toggle-button
+	    onclick="list.setEditMode(!list.getEditMode());"
+	    attr="editable"
+	    target="list"
+	    enabledText="Done"
+	    disabledText="Edit">Edit</toggle-button>
+	 <toggle-button
+	    id="show"
+	    attr="showCompleted"
+	    target="list"
+	    enabledText="Hide Completed"
+	    disabledText="Show Completed"
+	    >Show Completed</toggle-button>
+	 <push-button
+	    style="width: 1em"
+	    id="drop"
+	    onclick="list.remove()">-</push-button>
+	 <push-button
+	    style="width: 1em"
+	    id="new"
+	    onclick="list.append()">+</push-button>
        </button-bar>
+       
+       <!-- keep the editable property on #listView in sync with the
+	    editing property on #list. Several UI changes react to
+	    the editing property on #listView -->
+       <script>
+	 DOMAttrModified(list, "editable", function() {
+	 listView.setAttribute("editing", list.getAttribute("editable"));
+	 });
+       </script>
      </page>
+
      <script src="todo.js"></script>
    </body>
 </html>
