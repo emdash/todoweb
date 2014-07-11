@@ -75,7 +75,7 @@ button-bar {
 
 content:before {
     display: block;
-    padding: 20px;
+    padding: 1.25rem;
     font-size: small;
     content: " ";
 }
@@ -83,7 +83,7 @@ content:before {
 content:after {
     display: block;
     padding: 30px;
-    margin-top: 10px;
+    margin-top: 10em;
     font-size: 1rem;
     content: " ";
 }
@@ -147,7 +147,6 @@ push-button:active, toggle-button:active {
     color: white;
     background-color: black;
 }
-
 
 /* These rules handle "completed" list items. There's some tricky
    logic here:
