@@ -1,0 +1,3 @@
+[submodule "curvy"]
+	path = curvy
+	url = https://github.com/emdash/curvy.git
