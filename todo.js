@@ -23,6 +23,16 @@
  * SOFTWARE.
  */
 
+var TOAST_TIMEOUT = 3000;
+
+function toast (msg) {
+    var ret = el("toast");
+    ret.appendChild(text(msg));
+    document.body.appendChild(ret);
+    setTimeout(function () { ret.remove(); },
+	       TOAST_TIMEOUT);
+}
+
 todo = (function () {
 "use strict";
 var ret = {};
@@ -75,7 +85,8 @@ function remoteListModel(channel, defaultItem)
     }
 
     function handleDestroy(msg) {
-	alert("This list has been deleted");
+	history.back();
+	toast("The list has been deleted.");
     }
 
     ret.insert = function (index, attrs) {
@@ -258,6 +269,7 @@ function todoClient() {
 
     function handleError(msg) {
 	console.log("protocol error: " + JSON.stringify(msg));
+	toast(msg.message);
     }
 
     function handleSocketError() {

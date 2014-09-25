@@ -274,4 +274,15 @@ label {
 #loginview {
     vertical-align: middle;
     text-align: center;
+
+toast {
+    position: fixed;
+    top: 3em;
+    left: 2em;
+    right: 2em;
+    background-color: rgba(0, 0, 0, 0.80);
+    color: white;
+    border-radius: 0.5em;
+    padding: 1em;
+    z-index: 99999;
 }
