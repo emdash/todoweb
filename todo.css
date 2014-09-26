@@ -274,6 +274,30 @@ label {
 #loginview {
     vertical-align: middle;
     text-align: center;
+}
+
+#reconnectView {
+    background-color: rgba(0, 0, 0, 0.25);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+#reconnectView > div {
+    top: 1em;
+    left: 1em;
+    right: 1em;
+    position: fixed;
+    background-color: white;
+    padding: 1em;
+}
+
+body[disconnected="true"] #reconnectView {
+    display: block;
+    z-index: 99999;
+}
 
 toast {
     position: fixed;

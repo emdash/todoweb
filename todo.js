@@ -236,12 +236,16 @@ function todoClient() {
     var sock;
     var body = document.body;
     var lists;
+    var reconnecting = false;
 
-    function connect() {
+    function connect(reconnect) {
+	console.log(reconnect ? "reconnecting" : "connecting");
 	sock = channels.socket("http://" + window.location.hostname + ":8000/todo");
 	sock.setErrHandler(handleSocketError);
+	sock.setConnectHandler(handleConnect);
 	sock.setMsgHandler("login", handleLogin);
 	sock.setMsgHandler("error", handleError);
+	reconnecting = reconnect;
     }
 
     function setList(id, name) {
@@ -255,6 +259,7 @@ function todoClient() {
     }
 
     function doLogin(user, password) {
+	console.log("loggin in");
 	sock.send({type: "login",
 		   user: user,
 		   password: password});
@@ -263,8 +268,18 @@ function todoClient() {
     function handleLogin() {
 	lists = {};
 	listOfLists.setModel(listManagerModel(sock.join("control")));
+	setHomePage();
 	setCurrentPage("managerView");
 	restyle();
+    }
+
+    function handleConnect() {
+	console.log("connected");
+	setDisconnected(false);
+	if (reconnecting) {
+	    ret.login();
+	    reconnecting = false;
+	}
     }
 
     function handleError(msg) {
@@ -273,17 +288,17 @@ function todoClient() {
     }
 
     function handleSocketError() {
-	setCurrentPage("loginView");
-	alert("Lost connection to server. Reconnecting in 2 seconds.");
+        setDisconnected(true);
 	restyle();
-	setTimeout(connect, 2000);
     }
 
+    setDisconnected(true);
     connect();
 
     return {
 	login: doLogin,
-	setList: setList
+	setList: setList,
+	reconnect: function () { connect(true); }
     };
 };
 
@@ -291,16 +306,36 @@ ret.login = function () {
     server.login(login.value, password.value);
 };
 
-window.onpopstate = function (event) {
-    document.body.setAttribute("curView", event.state.page);
-    document.title = event.state.title;
+ret.reconnect = function () {
+    server.reconnect();
 };
+
+window.onpopstate = function (event) {
+    if (event.state) {
+	document.body.setAttribute("curView", event.state.page);
+	document.title = event.state.title;
+    } else {
+	document.title = "Todo";
+    }
+};
+
+function setDisconnected(state) {
+    var full_title = "Todo - Disconnected";
+    document.body.setAttribute("disconnected", state ? "true" : "false");
+    document.title = full_title;
+}
+
+function setHomePage() {
+    while (history.state) {
+	history.back();
+    }
+}
 
 function setCurrentPage(page, title) {
     var full_title = "Todo" + (title ? " - " + title : "");
     document.body.setAttribute("curView", page);
-    history.pushState({page: page, title: full_title}, null);
     document.title = full_title;
+    history.pushState({page: page, title: full_title}, null);
 };
 
 return ret;
