@@ -215,6 +215,10 @@ editable-list[editable="false"][showCompleted="false"] .listItem[completed=true]
     display: none;
 }
 
+#listView[editing="true"] #reset {
+    display: none;
+}
+
 
 /* Ad-hoc rules for the loginView */
 

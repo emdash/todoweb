@@ -292,6 +292,16 @@ function todoClient() {
 	restyle();
     }
 
+    list.setAllCompleted = function () {
+	var i;
+	for (i = list.firstChild; i != null; i = i.nextSibling) {
+	    console.log(i);
+	    if (i.getAttribute("completed") == "true") {
+		i.onclick();
+	    }
+	}
+    };
+
     setDisconnected(true);
     connect();
 
