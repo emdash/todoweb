@@ -149,7 +149,8 @@ ret.listManagerItem = function (list, model, items)
     };
 
     item.setEditable = function (editable) {
-	label.contentEditable = editable;
+	label.setAttribute("contentEditable",
+			   editable ? "true" : "false");
     };
 
     label.onclick = function (e) {
@@ -268,6 +269,7 @@ function todoClient() {
     function handleLogin() {
 	lists = {};
 	listOfLists.setModel(listManagerModel(sock.join("control")));
+	listOfLists.setEditMode("true");
 	setHomePage();
 	setCurrentPage("managerView");
 	restyle();
